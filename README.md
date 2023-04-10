@@ -10,6 +10,8 @@
 - Built using Rust, Serenity, Rust-Bert, Axum, and MongoDB
 
 ## Architecture Diagram
+![](./emotion-tracker-diagram.png)
+
 ```
     discord-emotion-tracker/
     ├── src/
