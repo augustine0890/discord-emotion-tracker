@@ -13,17 +13,22 @@ Discord Emotion Tracker is an application that collects messages from customer s
 ## Installation and Setup
 1. Clone the repository:
     ```bash
-    git clone https://github.com/yourusername/discord-emotion-tracker.git
+    git clone https://github.com/augustine0890/discord-emotion-tracker.git
     ```
 2. Change directory to the project folder:
     ```bash
     cd discord-emotion-tracker
     ```
 3. Create a config.yaml file in the project root with the following content:
-yaml
     ```yaml
-    discord_token: "your_discord_token_here"
-    mongo_uri: "mongodb://localhost:27017"
+    development:
+        discord_token: YOUR_DEVELOPMENT_DISCORD_TOKEN
+        mongo_uri: YOUR_DEVELOPMENT_MONGODB_URI
+
+    production:
+        discord_token: YOUR_PRODUCTION_DISCORD_TOKEN
+        mongo_uri: YOUR_PRODUCTION_MONGODB_URI
+
     ```
 4. Update the `config.yaml` file with your Discord token and MongoDB URI.
 
@@ -50,5 +55,6 @@ This project is licensed under the [MIT License](https://opensource.org/licenses
 ## Acknowledgements
 - [Rust](https://www.rust-lang.org/)
 - [Serenity](https://github.com/serenity-rs/serenity)
+- [Rust-Bert](https://github.com/guillaume-be/rust-bert)
 - [Axum](https://github.com/tokio-rs/axum)
 - [MongoDB](https://www.mongodb.com/)
