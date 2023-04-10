@@ -6,7 +6,7 @@ Discord Emotion Tracker is an application that collects messages from customer s
 - Send collected messages to a web server for further processing
 - Perform sentiment analysis using NLP machine learning models
 - Store processed messages and sentiment analysis results in MongoDB
-- Built using Rust, Serenity, Axum, and MongoDB
+- Built using Rust, Serenity, Rust-Bert, Axum, and MongoDB
 
 ## Architecture Diagram
 
