@@ -1,7 +1,9 @@
 mod config;
+mod discord;
 mod mongo;
 
 use config::Config;
+use discord::run_discord_bot;
 use mongo::get_mongo_db;
 
 use std::env;
@@ -24,5 +26,10 @@ async fn main() {
     println!("Collections in database: ");
     for name in coll_names.unwrap() {
         println!("{:?}", name);
+    }
+
+    let discord_bot_handle = run_discord_bot(&env_config.discord_token, db).await;
+    if let Err(err) = discord_bot_handle.await {
+        println!("An error occurred while running the Discord Bot: {}", err);
     }
 }
