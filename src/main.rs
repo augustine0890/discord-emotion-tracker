@@ -1,10 +1,13 @@
 mod config;
+mod mongo;
 
 use config::Config;
+use mongo::get_mongo_db;
 
 use std::env;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     // Load the configuration from the YAML file
     let config =
         Config::from_file("src/config.yaml").expect("Failed to load configuration from YAML file");
@@ -15,5 +18,11 @@ fn main() {
         .get_environment(&enviroment)
         .expect("Invalid environment configuration");
 
-    println!("{:?}", env_config);
+    let db = get_mongo_db(&env_config.mongo_uri).await;
+    // List collections in the database
+    let coll_names = db.list_collection_names(None).await;
+    println!("Collections in database: ");
+    for name in coll_names.unwrap() {
+        println!("{:?}", name);
+    }
 }
