@@ -4,15 +4,16 @@ use mongodb::error::Error;
 use mongodb::{bson, options::ClientOptions, Client, Database};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Message {
     #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
     pub id: Option<ObjectId>,
     pub username: String,
     pub channel: String,
     pub text: String,
-    #[serde(rename = "sentiment")]
+    #[serde(rename = "sentiment", skip_serializing_if = "Option::is_none")]
     pub hugging_face: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub emotion: Option<String>,
     #[serde(rename = "createdAt")]
     #[serde(with = "bson::serde_helpers::chrono_datetime_as_bson_datetime")]

@@ -34,8 +34,8 @@ impl EventHandler for Handler {
             channel: channel_name,
             text: msg.content,
             hugging_face: None,
-            emotion: None,
             created_at: adjusted_timestamp,
+            ..Default::default()
         };
 
         if let Err(e) = save_message(&self.db, &message).await {
