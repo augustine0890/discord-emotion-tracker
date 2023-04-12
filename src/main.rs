@@ -28,5 +28,8 @@ async fn main() {
         println!("{:?}", name);
     }
 
-    run_discord_bot(&env_config.discord_token, db).await;
+    let discord_bot_handle = run_discord_bot(&env_config.discord_token, db).await;
+    if let Err(err) = discord_bot_handle.await {
+        println!("An error occurred while running the Discord Bot: {}", err);
+    }
 }

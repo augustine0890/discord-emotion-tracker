@@ -1,7 +1,6 @@
-use chrono::{Duration, Utc};
-use tokio::sync::Mutex;
-// use mongodb::{options::ClientOptions, Client, Database};
 use crate::mongo::{save_message, Message};
+use chrono::{Duration, Utc};
+
 use mongodb::Database;
 use rust_bert::pipelines::sentiment::{SentimentModel, SentimentPolarity};
 use serenity::{
@@ -13,7 +12,6 @@ use serenity::{
 #[allow(dead_code)]
 struct Handler {
     db: Database,
-    sentiment_model: Mutex<SentimentModel>,
 }
 
 #[async_trait]
@@ -23,24 +21,21 @@ impl EventHandler for Handler {
     }
 
     async fn message(&self, ctx: Context, msg: DiscordMessage) {
+        // Skip processing messages from bots
         if msg.author.bot {
             return;
         }
 
-        // Lock the sentiment model for use
-        let sentiment_model = self.sentiment_model.lock().await;
-        // Perform sentiment analysis using the existing SentimentModel instance
-        let sentiment_output = sentiment_model.predict(&[msg.content.as_str()]);
-        // MutexGuard will be dropped automatically at the end of the scope
-        let sentiment = match sentiment_output[0].polarity {
-            SentimentPolarity::Negative => Some("negative".to_string()),
-            SentimentPolarity::Positive => Some("positive".to_string()),
-        };
+        // Predict the sentiment of the message
+        let sentiment = predict_sentiment(&msg.content).await;
 
-        // Add 9 hours to the system time
+        // Adjust the timestamp to the local timezone (UTC+9)
         let adjusted_timestamp = Utc::now() + Duration::hours(9);
 
+        // Get the name of the channel the message was sent in
         let channel_name = get_channel_name(ctx, &msg).await.unwrap_or_default();
+
+        // Create a Message struct from the discord message
         let message = Message {
             id: None,
             username: msg.author.name,
@@ -51,27 +46,24 @@ impl EventHandler for Handler {
             ..Default::default()
         };
 
+        // Save the message to the database
         if let Err(e) = save_message(&self.db, &message).await {
             println!("Error saving message: {:?}", e);
         }
     }
 }
 
-pub async fn run_discord_bot(token: &str, db: Database) {
-    // Create a single instance of the SentimentModel
-    let sentiment_model =
-        Mutex::new(SentimentModel::new(Default::default()).expect("Error loading sentiment model"));
-
+pub async fn run_discord_bot(token: &str, db: Database) -> tokio::task::JoinHandle<()> {
     let intents = GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
     let mut client = Client::builder(&token, intents)
-        .event_handler(Handler {
-            db,
-            sentiment_model,
-        })
+        .event_handler(Handler { db })
         .await
         .expect("Error creating Discord client");
 
-    client.start().await.expect("Error starting Discord client");
+    let handler = tokio::spawn(async move {
+        client.start().await.expect("Error starting Discord client");
+    });
+    handler
 }
 
 async fn get_channel_name(ctx: Context, message: &DiscordMessage) -> Option<String> {
@@ -82,4 +74,25 @@ async fn get_channel_name(ctx: Context, message: &DiscordMessage) -> Option<Stri
         Channel::Private(channel) => Some(channel.name()),
         _ => None,
     }
+}
+
+async fn predict_sentiment(content: &str) -> Option<String> {
+    // Clone the content so that it can be moved into the task
+    let cloned_content = content.to_owned();
+
+    // Spawn a blocking task to perform sentiment analysis
+    let sentiment_output = tokio::task::spawn_blocking(move || {
+        // Create a new instance of the SentimentModel using the default pretrained model
+        let sentiment_model = SentimentModel::new(Default::default()).unwrap();
+        sentiment_model.predict(&[cloned_content.as_str()])
+    })
+    .await
+    .unwrap();
+
+    // Determine whether the sentiment is positive or negative and return an appropriate value
+    let sentiment = match sentiment_output[0].polarity {
+        SentimentPolarity::Negative => Some("negative".to_string()),
+        SentimentPolarity::Positive => Some("positive".to_string()),
+    };
+    sentiment
 }
