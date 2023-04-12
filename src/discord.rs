@@ -1,7 +1,9 @@
 use chrono::{Duration, Utc};
+use tokio::sync::Mutex;
 // use mongodb::{options::ClientOptions, Client, Database};
 use crate::mongo::{save_message, Message};
 use mongodb::Database;
+use rust_bert::pipelines::sentiment::{SentimentModel, SentimentPolarity};
 use serenity::{
     async_trait,
     model::{channel::Channel, channel::Message as DiscordMessage, gateway::Ready},
@@ -11,6 +13,7 @@ use serenity::{
 #[allow(dead_code)]
 struct Handler {
     db: Database,
+    sentiment_model: Mutex<SentimentModel>,
 }
 
 #[async_trait]
@@ -24,6 +27,16 @@ impl EventHandler for Handler {
             return;
         }
 
+        // Lock the sentiment model for use
+        let sentiment_model = self.sentiment_model.lock().await;
+        // Perform sentiment analysis using the existing SentimentModel instance
+        let sentiment_output = sentiment_model.predict(&[msg.content.as_str()]);
+        // MutexGuard will be dropped automatically at the end of the scope
+        let sentiment = match sentiment_output[0].polarity {
+            SentimentPolarity::Negative => Some("negative".to_string()),
+            SentimentPolarity::Positive => Some("positive".to_string()),
+        };
+
         // Add 9 hours to the system time
         let adjusted_timestamp = Utc::now() + Duration::hours(9);
 
@@ -33,7 +46,7 @@ impl EventHandler for Handler {
             username: msg.author.name,
             channel: channel_name,
             text: msg.content,
-            hugging_face: None,
+            hugging_face: sentiment,
             created_at: adjusted_timestamp,
             ..Default::default()
         };
@@ -44,17 +57,21 @@ impl EventHandler for Handler {
     }
 }
 
-pub async fn run_discord_bot(token: &str, db: Database) -> tokio::task::JoinHandle<()> {
+pub async fn run_discord_bot(token: &str, db: Database) {
+    // Create a single instance of the SentimentModel
+    let sentiment_model =
+        Mutex::new(SentimentModel::new(Default::default()).expect("Error loading sentiment model"));
+
     let intents = GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
     let mut client = Client::builder(&token, intents)
-        .event_handler(Handler { db })
+        .event_handler(Handler {
+            db,
+            sentiment_model,
+        })
         .await
         .expect("Error creating Discord client");
 
-    let handler = tokio::spawn(async move {
-        client.start().await.expect("Error starting Discord client");
-    });
-    handler
+    client.start().await.expect("Error starting Discord client");
 }
 
 async fn get_channel_name(ctx: Context, message: &DiscordMessage) -> Option<String> {
