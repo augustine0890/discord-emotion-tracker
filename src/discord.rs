@@ -1,5 +1,5 @@
 use crate::mongo::{save_message, Message};
-use crate::util::replace_mentions;
+use crate::util::{replace_mentions, should_ignore_user};
 use chrono::{Duration, Utc};
 
 use mongodb::Database;
@@ -23,7 +23,7 @@ impl EventHandler for Handler {
 
     async fn message(&self, ctx: Context, msg: DiscordMessage) {
         // Skip processing messages from bots
-        if msg.author.bot {
+        if msg.author.bot || should_ignore_user(&msg) {
             return;
         }
 

@@ -60,3 +60,19 @@ pub async fn replace_mentions(ctx: &Context, msg: &Message) -> String {
 
     content
 }
+
+pub fn should_ignore_user(msg: &Message) -> bool {
+    let ignored_user_ids: &[&str] = &[
+        "983924510220779550",  // wen
+        "1026733912778625026", // corrie
+        "912897330213179402",  // rosie
+        "885891259053531176",  // semi
+        "948825318515425280",  // sky
+        "1060788078266036305", // TweetShiftBOT
+                               // "623155071735037982",
+    ];
+
+    ignored_user_ids
+        .iter()
+        .any(|&id| id == &msg.author.id.to_string())
+}
