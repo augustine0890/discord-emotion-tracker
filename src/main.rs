@@ -1,6 +1,7 @@
 mod config;
 mod discord;
 mod mongo;
+mod util;
 
 use config::Config;
 use discord::run_discord_bot;

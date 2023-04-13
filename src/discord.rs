@@ -1,4 +1,5 @@
 use crate::mongo::{save_message, Message};
+use crate::util::replace_mentions;
 use chrono::{Duration, Utc};
 
 use mongodb::Database;
@@ -26,8 +27,11 @@ impl EventHandler for Handler {
             return;
         }
 
+        // Replace mentions in the message content
+        let content = replace_mentions(&ctx, &msg).await;
+
         // Predict the sentiment of the message
-        let sentiment = predict_sentiment(&msg.content).await;
+        let sentiment = predict_sentiment(&content).await;
 
         // Adjust the timestamp to the local timezone (UTC+9)
         let adjusted_timestamp = Utc::now() + Duration::hours(9);
@@ -40,7 +44,7 @@ impl EventHandler for Handler {
             id: None,
             username: msg.author.name,
             channel: channel_name,
-            text: msg.content,
+            text: content,
             hugging_face: sentiment,
             created_at: adjusted_timestamp,
             ..Default::default()
