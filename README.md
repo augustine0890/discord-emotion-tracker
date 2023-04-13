@@ -71,6 +71,14 @@
 
     ```
 
+## Build Docker
+- Build the Docker image
+    - `docker build -t discord-emotion-tracker .`
+- Run the Docker container
+    - `docker run --name discord-emotion-tracker -it --rm discord-emotion-tracker`
+- Run the container in development enviroment
+    - `docker run --env APP_ENV=development discord-emotion-tracker`
+
 ## Usage
 Once the application is running, it will listen to messages from the configured Discord channels. Messages will be sent to the web server for processing and sentiment analysis. The processed messages and sentiment analysis results will be stored in the MongoDB database.
 
