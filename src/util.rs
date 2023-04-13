@@ -76,3 +76,31 @@ pub fn should_ignore_user(msg: &Message) -> bool {
         .iter()
         .any(|&id| id == &msg.author.id.to_string())
 }
+
+pub fn should_ignore_channel(msg: &Message) -> bool {
+    let ignored_channel_ids: &[&str] = &[
+        "1021958640829210674", // test server (attendance)
+        "1069854617011224637", // attendance-beta-version
+        "808621206718251058",  // moderator-only
+        "537522976963166218",  // announcements.
+        "583944383083184129",  // playdapp-sns.
+        "570896878858665984",  // welcome.
+        "583944743655047178",  // rules-and-admin-team.
+        "920238004147204177",  // filipino.
+        "585672690111610880",  // chinese.
+        "585672615683686419",  // russian.
+        "583934248512258059",  // japanese.
+        "585672591449260032",  // vietnamese.
+        "1016194558926803075", // indonesia
+        "1054296641651347486", // notify
+        "1021958640829210674", // attendance
+    ];
+
+    ignored_channel_ids
+        .iter()
+        .any(|&id| id == &msg.channel_id.to_string())
+}
+
+pub fn has_minimum_word_count(msg: &Message, min_word_count: usize) -> bool {
+    msg.content.split_whitespace().count() >= min_word_count
+}

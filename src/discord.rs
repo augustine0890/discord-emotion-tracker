@@ -1,5 +1,7 @@
 use crate::mongo::{save_message, Message};
-use crate::util::{replace_mentions, should_ignore_user};
+use crate::util::{
+    has_minimum_word_count, replace_mentions, should_ignore_channel, should_ignore_user,
+};
 use chrono::{Duration, Utc};
 
 use mongodb::Database;
@@ -23,7 +25,11 @@ impl EventHandler for Handler {
 
     async fn message(&self, ctx: Context, msg: DiscordMessage) {
         // Skip processing messages from bots
-        if msg.author.bot || should_ignore_user(&msg) {
+        if msg.author.bot
+            || should_ignore_user(&msg)
+            || should_ignore_channel(&msg)
+            || !has_minimum_word_count(&msg, 5)
+        {
             return;
         }
 
