@@ -1,6 +1,7 @@
 use crate::mongo::{save_message, Message};
 use crate::util::{
     has_minimum_word_count, replace_mentions, should_ignore_channel, should_ignore_user,
+    should_not_ignore_guild,
 };
 use chrono::{Duration, Utc};
 
@@ -29,6 +30,7 @@ impl EventHandler for Handler {
             || should_ignore_user(&msg)
             || should_ignore_channel(&msg)
             || !has_minimum_word_count(&msg, 5)
+            || should_not_ignore_guild(&msg)
         {
             return;
         }

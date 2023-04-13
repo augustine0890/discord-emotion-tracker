@@ -104,3 +104,17 @@ pub fn should_ignore_channel(msg: &Message) -> bool {
 pub fn has_minimum_word_count(msg: &Message, min_word_count: usize) -> bool {
     msg.content.split_whitespace().count() >= min_word_count
 }
+
+pub fn should_not_ignore_guild(msg: &Message) -> bool {
+    let guild_id = match msg.guild_id {
+        Some(id) => id,
+        None => return false,
+    };
+
+    let guild_ids = &[
+        "537515978561683466",
+        "1019782712799805440", // testing guild
+    ];
+
+    !guild_ids.iter().any(|&id| id == guild_id.to_string())
+}
