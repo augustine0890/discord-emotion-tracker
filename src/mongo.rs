@@ -1,7 +1,7 @@
-use chrono::Utc;
-use mongodb::bson::{doc, oid::ObjectId};
+use chrono::{Duration, Utc};
+use mongodb::bson::{doc, oid::ObjectId, DateTime};
 use mongodb::error::Error;
-use mongodb::{bson, options::ClientOptions, Client, Database};
+use mongodb::{options::ClientOptions, Client, Database};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Default)]
@@ -41,4 +41,16 @@ pub async fn save_message(db: &Database, message: &Message) -> Result<(), Error>
         .insert_one(message_doc, None)
         .await
         .map(|_| ())
+}
+
+#[allow(dead_code)]
+pub async fn delete_messages(db: &Database) -> Result<(), Box<dyn std::error::Error>> {
+    let message_collection = db.collection::<mongodb::bson::Document>("messages");
+    let three_weeks_ago = Utc::now() - Duration::weeks(3);
+    let three_weeks_ago_bson = DateTime::from_chrono(three_weeks_ago);
+
+    message_collection
+        .delete_many(doc! { "createdAt": { "$lt": three_weeks_ago_bson } }, None)
+        .await?;
+    Ok(())
 }

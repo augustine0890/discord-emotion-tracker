@@ -13,7 +13,6 @@ use serenity::{
     prelude::*,
 };
 
-#[allow(dead_code)]
 struct Handler {
     db: Database,
 }
