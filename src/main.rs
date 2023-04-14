@@ -14,9 +14,11 @@ use tokio::spawn;
 
 #[tokio::main]
 async fn main() {
+    let config_path = env::var("CONFIG_PATH").unwrap_or_else(|_| "config.yaml".to_string());
     // Load the configuration from the YAML file
+
     let config =
-        Config::from_file("src/config.yaml").expect("Failed to load configuration from YAML file");
+        Config::from_file(&config_path).expect("Failed to load configuration from YAML file");
 
     // Choose the enviroment: "development" or "production"
     let enviroment = env::var("APP_ENV").unwrap_or_else(|_| "production".to_string());
