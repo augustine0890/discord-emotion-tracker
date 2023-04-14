@@ -1,13 +1,16 @@
 mod config;
 mod discord;
 mod mongo;
+mod scheduler;
 mod util;
 
 use config::Config;
 use discord::run_discord_bot;
 use mongo::get_mongo_db;
+use scheduler::start_scheduler;
 
 use std::env;
+use tokio::spawn;
 
 #[tokio::main]
 async fn main() {
@@ -22,6 +25,14 @@ async fn main() {
         .expect("Invalid environment configuration");
 
     let db = get_mongo_db(&env_config.mongo_uri).await;
+
+    // Create a clone of the database connection
+    let db_clone = db.clone();
+    // Start the scheduler for deleting messages, without blocking the main function.
+    spawn(async move {
+        start_scheduler(&db_clone).await;
+    });
+
     // List collections in the database
     let coll_names = db.list_collection_names(None).await;
     println!("Collections in database: ");

@@ -47,6 +47,7 @@ pub async fn save_message(db: &Database, message: &Message) -> Result<(), Error>
 pub async fn delete_messages(db: &Database) -> Result<(), Box<dyn std::error::Error>> {
     let message_collection = db.collection::<mongodb::bson::Document>("messages");
     let three_weeks_ago = Utc::now() - Duration::weeks(3);
+    // let three_weeks_ago = Utc::now() + Duration::hours(10); // For testing
     let three_weeks_ago_bson = DateTime::from_chrono(three_weeks_ago);
 
     message_collection
