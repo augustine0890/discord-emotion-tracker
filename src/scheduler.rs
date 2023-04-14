@@ -22,14 +22,16 @@ pub async fn start_scheduler(db: &Database) {
 
         // Calculate the duration until the next scheduled event
         let duration_until_next_event = (next_event - seoul_now).to_std().unwrap();
+        let days = duration_until_next_event.as_secs() / (24 * 3600);
+        let hours = (duration_until_next_event.as_secs() % (24 * 3600)) / 3600;
 
         let timestamp = Utc::now();
         let formatted_timestamp = timestamp.format("%Y-%m-%d %H:%M:%S");
 
         // Print the waiting time util the next scheduled event
         println!(
-            "[{}] Waiting until next scheduled event: {:?}",
-            formatted_timestamp, duration_until_next_event
+            "Waiting until next scheduled event [{}]: in {} days and {} hours.",
+            next_event, days, hours
         );
 
         // Sleep the current task for the calculated duration
@@ -38,8 +40,17 @@ pub async fn start_scheduler(db: &Database) {
         // After waking up, run the delete_messages function
         println!("[{}] Running delete messages", formatted_timestamp);
         // If there is an error while running delete_messages, print the error
-        if let Err(e) = delete_messages(&db).await {
-            println!("Error deleting messages: {:?}", e);
+        match delete_messages(&db).await {
+            Ok(result) => {
+                let deleted_count = result.deleted_count;
+                println!(
+                    "[{}] Deleted {} message(s)",
+                    formatted_timestamp, deleted_count
+                );
+            }
+            Err(e) => {
+                println!("[{}] Error deleting messages: {:?}", formatted_timestamp, e);
+            }
         }
     }
 }
