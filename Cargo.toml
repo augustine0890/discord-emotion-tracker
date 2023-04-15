@@ -18,4 +18,4 @@ aws-sdk-comprehend = "0.26.0"
 aws-config = "0.55.1"
 regex = "1.7"
 cron = "0.12.0"
-chrono-tz = { version = "0.6", features = [ "filter-by-regex" ] }
+chrono-tz = { version = "0.8.2", features = [ "filter-by-regex" ] }
