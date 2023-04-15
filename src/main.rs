@@ -2,9 +2,9 @@ mod config;
 mod discord;
 mod mongo;
 mod scheduler;
+mod sentiment;
 mod util;
 
-use config::Config;
 use discord::run_discord_bot;
 use mongo::get_mongo_db;
 use scheduler::start_scheduler;
@@ -16,15 +16,15 @@ use tokio::spawn;
 async fn main() {
     let config_path = env::var("CONFIG_PATH").unwrap_or_else(|_| "config.yaml".to_string());
     // Load the configuration from the YAML file
+    let config = config::load_config(&config_path);
 
-    let config =
-        Config::from_file(&config_path).expect("Failed to load configuration from YAML file");
-
-    // Choose the enviroment: "development" or "production"
-    let enviroment = env::var("APP_ENV").unwrap_or_else(|_| "production".to_string());
+    // Choose the environment: "development" or "production"
+    let environment = env::var("APP_ENV").unwrap_or_else(|_| "production".to_string());
     let env_config = config
-        .get_environment(&enviroment)
+        .get_environment(&environment)
         .expect("Invalid environment configuration");
+
+    config::set_env_variables(env_config);
 
     let db = get_mongo_db(&env_config.mongo_uri).await;
 

@@ -13,7 +13,7 @@ pub struct Message {
     pub channel: String,
     pub text: String,
     #[serde(rename = "sentiment", skip_serializing_if = "Option::is_none")]
-    pub hugging_face: Option<String>,
+    pub analyzed: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub emotion: Option<String>,
     #[serde(rename = "createdAt")]
