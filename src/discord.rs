@@ -1,4 +1,5 @@
 use crate::mongo::{save_message, Message};
+use crate::sentiment::analyze_sentiment;
 use crate::util::{
     has_minimum_word_count, replace_mentions, should_ignore_channel, should_ignore_user,
     should_not_ignore_guild,
@@ -6,7 +7,6 @@ use crate::util::{
 use chrono::{Duration, Utc};
 
 use mongodb::Database;
-use rust_bert::pipelines::sentiment::{SentimentModel, SentimentPolarity};
 use serenity::{
     async_trait,
     model::{channel::Channel, channel::Message as DiscordMessage, gateway::Ready},
@@ -37,8 +37,11 @@ impl EventHandler for Handler {
         // Replace mentions in the message content
         let content = replace_mentions(&ctx, &msg).await;
 
-        // Predict the sentiment of the message
-        let sentiment = predict_sentiment(&content).await;
+        // Try to analyze sentiment and log any error that occurs
+        let sentiment = analyze_sentiment(&content)
+            .await
+            .map_err(|err| println!("Error detecting sentiment: {}", err))
+            .ok();
 
         // Adjust the timestamp to the local timezone (UTC+9)
         let adjusted_timestamp = Utc::now() + Duration::hours(9);
@@ -52,7 +55,7 @@ impl EventHandler for Handler {
             username: msg.author.name,
             channel: channel_name,
             text: content,
-            hugging_face: sentiment,
+            analyzed: sentiment,
             created_at: adjusted_timestamp,
             ..Default::default()
         };
@@ -85,25 +88,4 @@ async fn get_channel_name(ctx: Context, message: &DiscordMessage) -> Option<Stri
         Channel::Private(channel) => Some(channel.name()),
         _ => None,
     }
-}
-
-async fn predict_sentiment(content: &str) -> Option<String> {
-    // Clone the content so that it can be moved into the task
-    let cloned_content = content.to_owned();
-
-    // Spawn a blocking task to perform sentiment analysis
-    let sentiment_output = tokio::task::spawn_blocking(move || {
-        // Create a new instance of the SentimentModel using the default pretrained model
-        let sentiment_model = SentimentModel::new(Default::default()).unwrap();
-        sentiment_model.predict(&[cloned_content.as_str()])
-    })
-    .await
-    .unwrap();
-
-    // Determine whether the sentiment is positive or negative and return an appropriate value
-    let sentiment = match sentiment_output[0].polarity {
-        SentimentPolarity::Negative => Some("negative".to_string()),
-        SentimentPolarity::Positive => Some("positive".to_string()),
-    };
-    sentiment
 }
