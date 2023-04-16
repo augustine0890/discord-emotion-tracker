@@ -38,7 +38,7 @@ async fn main() {
 
     // List collections in the database
     let coll_names = db.list_collection_names(None).await;
-    println!("Collections in database: ");
+    print!("Collections in database: ");
     for name in coll_names.unwrap() {
         println!("{:?}", name);
     }

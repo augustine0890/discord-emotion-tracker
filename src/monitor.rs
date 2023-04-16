@@ -96,13 +96,17 @@ pub async fn monitor_memory_stats(client: Client, channel_id: ChannelId) {
     let http = client.cache_and_http.http.clone();
     let sending_task = async move {
         // Set up the cron schedule for sending the memory_stats_embed at 10 AM every day
-        let cron_expression = "0 56 22 * * *"; // 10:0 AM every day
+        let cron_expression = "0 0 10 * * *"; // 10:0 AM every day
         let schedule =
             Schedule::from_str(cron_expression).expect("Failed to parse the cron schedule");
 
         loop {
             let seoul_now = Utc::now().with_timezone(&Seoul);
             let next_event = schedule.upcoming(Seoul).next().unwrap();
+            println!(
+                "[Send Memory Usage] Waiting until next scheduled event [{}].",
+                next_event,
+            );
 
             let duration_until_next_event = (next_event - seoul_now).to_std().unwrap();
             tokio::time::sleep(duration_until_next_event).await;
