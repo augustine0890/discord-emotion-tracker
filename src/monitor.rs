@@ -4,8 +4,9 @@ use std::time::Duration;
 use sysinfo::{System, SystemExt};
 use tokio::time::interval_at;
 
-use crate::discord::{memory_stats_embed, send_embed_to_user};
+use crate::discord::{memory_stats_alert_embed, memory_stats_embed, send_embed_to_user};
 
+#[derive(Debug, Clone)]
 pub struct MemoryStats {
     pub total_memory: f64,
     pub used_memory: f64,
@@ -75,26 +76,41 @@ fn display_memory_stats() {
 pub async fn monitor_memory_stats(client: &Client, channel_id: ChannelId) {
     let monitoring_interval = Duration::from_secs(2 * 60); // 2 minutes
     let print_interval = Duration::from_secs(24 * 60 * 60); // 24 hours
+    let sending_interval = Duration::from_secs(24 * 60 * 60); // 24 hours
 
     let mut monitoring_timer = interval_at(tokio::time::Instant::now(), monitoring_interval);
     let mut print_timer = interval_at(tokio::time::Instant::now(), print_interval);
+    let mut sending_timer = interval_at(tokio::time::Instant::now(), sending_interval);
+
+    let mut stats = get_memory_stats();
 
     loop {
         tokio::select! {
             _ = monitoring_timer.tick() => {
-                let stats = get_memory_stats();
-                let embed = memory_stats_embed(stats);
+                stats = get_memory_stats();
+                if stats.used_memory_percentage > 95.0 {
+                    let embed = memory_stats_alert_embed(stats.clone());
+
+                    // Send the embed to the channel
+                    let _ = channel_id.send_message(&client.cache_and_http.http, |m| {
+                        m.set_embed(embed.clone())
+                    }).await;
+
+                    // Send the embed as direct message
+                    let user_id: u64 = 623155071735037982; // Replace with the target user's ID
+                    if let Err(e) = send_embed_to_user(&client, user_id, embed).await {
+                        println!("Error sending DM: {:?}", e);
+                    }
+                }
+            },
+
+            _ = sending_timer.tick() => {
+                let embed = memory_stats_embed(stats.clone());
 
                 // Send the embed to the channel
                 let _ = channel_id.send_message(&client.cache_and_http.http, |m| {
                     m.set_embed(embed.clone())
                 }).await;
-
-                // Send the embed as direct message
-                let user_id: u64 = 623155071735037982; // Replace with the target user's ID
-                if let Err(e) = send_embed_to_user(&client, user_id, embed).await {
-                    println!("Error sending DM: {:?}", e);
-                }
             },
 
             _ = print_timer.tick() => {
