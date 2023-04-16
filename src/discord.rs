@@ -1,5 +1,5 @@
 use crate::mongo::{save_message, Message};
-use crate::monitor::{monitor_memory_stats, MemoryStats};
+use crate::monitor::{monitor_memory_stats, send_signal_alert, MemoryStats};
 use crate::sentiment::analyze_sentiment;
 use crate::util::{
     has_minimum_word_count, replace_mentions, should_ignore_channel, should_ignore_user,
@@ -91,6 +91,14 @@ pub async fn run_discord_bot(token: &str, db: Database) -> tokio::task::JoinHand
     let channel_id = ChannelId(1054296641651347486); // Replace with the specific channel ID
     tokio::spawn(monitor_memory_stats(monitoring_client, channel_id));
 
+    // Create a separate client for signal alerts
+    let signal_alert_client = Client::builder(&token, intents)
+        .await
+        .expect("Error creating signal alert Discord client");
+
+    // Start sending signal alerts
+    tokio::spawn(send_signal_alert(signal_alert_client, channel_id));
+
     let handler = tokio::spawn(async move {
         client.start().await.expect("Error starting Discord client");
     });
@@ -176,4 +184,20 @@ pub async fn send_embed_to_user(
         .await?;
 
     Ok(())
+}
+
+pub fn signal_alert_embed(signal: &str) -> CreateEmbed {
+    let title = "Application Termination Alert";
+    let description = format!("The application received a {} signal.", signal);
+    let color = 0xFF0000;
+
+    let mut embed = CreateEmbed::default();
+
+    embed
+        .title(title)
+        .description(description)
+        .color(color)
+        .timestamp(chrono::Utc::now().to_rfc3339());
+
+    embed
 }
