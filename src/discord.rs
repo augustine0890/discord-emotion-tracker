@@ -8,11 +8,17 @@ use crate::util::{
 use chrono::{Duration, Utc};
 
 use mongodb::Database;
+
 use serenity::builder::CreateEmbed;
 use serenity::utils::Color;
 use serenity::{
     async_trait,
-    model::{channel::Channel, channel::Message as DiscordMessage, gateway::Ready, id::ChannelId},
+    model::{
+        channel::Channel,
+        channel::Message as DiscordMessage,
+        gateway::Ready,
+        id::{ChannelId, UserId},
+    },
     prelude::*,
 };
 
@@ -122,4 +128,20 @@ pub fn memory_stats_embed(stats: MemoryStats) -> CreateEmbed {
         .color(Color::new(0x0000ff));
 
     embed
+}
+
+pub async fn send_embed_to_user(
+    client: &Client,
+    user_id: u64,
+    embed: CreateEmbed,
+) -> Result<(), serenity::Error> {
+    let user = UserId(user_id).to_user(&client.cache_and_http.http).await?;
+
+    let dm_channel = user.create_dm_channel(&client.cache_and_http.http).await?;
+
+    dm_channel
+        .send_message(&client.cache_and_http.http, |m| m.set_embed(embed))
+        .await?;
+
+    Ok(())
 }

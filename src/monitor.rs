@@ -4,7 +4,7 @@ use std::time::Duration;
 use sysinfo::{System, SystemExt};
 use tokio::time::interval_at;
 
-use crate::discord::memory_stats_embed;
+use crate::discord::{memory_stats_embed, send_embed_to_user};
 
 pub struct MemoryStats {
     pub total_memory: f64,
@@ -84,9 +84,17 @@ pub async fn monitor_memory_stats(client: &Client, channel_id: ChannelId) {
             _ = monitoring_timer.tick() => {
                 let stats = get_memory_stats();
                 let embed = memory_stats_embed(stats);
+
+                // Send the embed to the channel
                 let _ = channel_id.send_message(&client.cache_and_http.http, |m| {
-                    m.set_embed(embed)
+                    m.set_embed(embed.clone())
                 }).await;
+
+                // Send the embed as direct message
+                let user_id: u64 = 623155071735037982; // Replace with the target user's ID
+                if let Err(e) = send_embed_to_user(&client, user_id, embed).await {
+                    println!("Error sending DM: {:?}", e);
+                }
             },
 
             _ = print_timer.tick() => {
