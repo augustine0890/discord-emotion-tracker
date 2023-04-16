@@ -30,7 +30,7 @@ pub async fn start_scheduler(db: &Database) {
 
         // Print the waiting time util the next scheduled event
         println!(
-            "Waiting until next scheduled event [{}]: in {} days and {} hours.",
+            "[Delete Documents] Waiting until next scheduled event [{}]: in {} days and {} hours.",
             next_event, days, hours
         );
 

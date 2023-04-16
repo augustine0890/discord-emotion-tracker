@@ -6,7 +6,6 @@ use crate::util::{
     should_not_ignore_guild,
 };
 use chrono::{Duration, Utc};
-
 use mongodb::Database;
 
 use serenity::builder::CreateEmbed;
@@ -83,13 +82,19 @@ pub async fn run_discord_bot(token: &str, db: Database) -> tokio::task::JoinHand
         .await
         .expect("Error creating Discord client");
 
+    // Create a separate client for monitoring and sending memory stats
+    let monitoring_client = Client::builder(&token, intents)
+        .await
+        .expect("Error creating monitoring Discord client");
+
     // Start monitoring and sending memory stats
     let channel_id = ChannelId(1054296641651347486); // Replace with the specific channel ID
-    monitor_memory_stats(&client, channel_id).await;
+    tokio::spawn(monitor_memory_stats(monitoring_client, channel_id));
 
     let handler = tokio::spawn(async move {
         client.start().await.expect("Error starting Discord client");
     });
+
     handler
 }
 
