@@ -9,7 +9,9 @@ use std::time::Duration;
 use sysinfo::{System, SystemExt};
 use tokio::time::interval_at;
 
-use crate::discord::{memory_stats_alert_embed, memory_stats_embed, send_embed_to_user};
+use crate::discord::{
+    memory_stats_alert_embed, memory_stats_embed, send_embed_to_user, signal_alert_embed,
+};
 
 #[derive(Debug, Clone, Copy)]
 pub struct MemoryStats {
@@ -150,6 +152,39 @@ pub async fn monitor_memory_stats(client: Client, channel_id: ChannelId) {
             _ = print_timer.tick() => {
                 display_memory_stats();
             },
+        }
+    }
+}
+
+pub async fn send_signal_alert(client: Client, channel_id: ChannelId) {
+    use std::process::exit;
+    use tokio::signal::unix::{signal, SignalKind};
+
+    let mut sigint = signal(SignalKind::interrupt()).unwrap();
+    let mut sigterm = signal(SignalKind::terminate()).unwrap();
+    let mut sighup = signal(SignalKind::hangup()).unwrap();
+    let mut sigquit = signal(SignalKind::quit()).unwrap();
+
+    tokio::select! {
+        _ = sigint.recv() => {
+            let embed = signal_alert_embed("SIGINT");
+            let _ = channel_id.send_message(&client.cache_and_http.http, |m| m.set_embed(embed)).await;
+            exit(0);
+        }
+        _ = sigterm.recv() => {
+            let embed = signal_alert_embed("SIGTERM");
+            let _ = channel_id.send_message(&client.cache_and_http.http, |m| m.set_embed(embed)).await;
+            exit(0);
+        }
+        _ = sighup.recv() => {
+            let embed = signal_alert_embed("SIGHUP");
+            let _ = channel_id.send_message(&client.cache_and_http.http, |m| m.set_embed(embed)).await;
+            exit(0);
+        }
+        _ = sigquit.recv() => {
+            let embed = signal_alert_embed("SIGQUIT");
+            let _ = channel_id.send_message(&client.cache_and_http.http, |m| m.set_embed(embed)).await;
+            exit(0);
         }
     }
 }
