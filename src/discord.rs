@@ -130,6 +130,33 @@ pub fn memory_stats_embed(stats: MemoryStats) -> CreateEmbed {
     embed
 }
 
+pub fn memory_stats_alert_embed(stats: MemoryStats) -> CreateEmbed {
+    let mut embed = CreateEmbed::default();
+    embed
+        .title("Memory Usage Report Alert")
+        .description("⚠️ Warning: High memory usage detected! This can lead to performance issues or even crashes. It's highly recommended to investigate and resolve the situation as soon as possible.")
+        .color(0xff0000) // Red color
+        .field(
+            "Total Memory",
+            format!("{:.2} GB", stats.total_memory),
+            true,
+        )
+        .field("Used Memory", format!("{:.2} GB", stats.used_memory), true)
+        .field("Free Memory", format!("{:.2} GB", stats.free_memory), true)
+        .field(
+            "Available Memory",
+            format!("{:.2} GB", stats.available_memory),
+            false,
+        )
+        .field(
+            "Used Memory Percentage",
+            format!("{:.2}%", stats.used_memory_percentage),
+            false,
+        )
+        .timestamp(chrono::Utc::now().to_rfc3339());
+    embed
+}
+
 pub async fn send_embed_to_user(
     client: &Client,
     user_id: u64,
