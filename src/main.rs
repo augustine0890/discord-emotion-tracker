@@ -1,6 +1,7 @@
 mod config;
 mod discord;
 mod mongo;
+mod monitor;
 mod scheduler;
 mod sentiment;
 mod util;
@@ -14,6 +15,9 @@ use tokio::spawn;
 
 #[tokio::main]
 async fn main() {
+    // Start monitoring and printing memory stats
+    monitor::display_memory_stats();
+
     let config_path = env::var("CONFIG_PATH").unwrap_or_else(|_| "config.yaml".to_string());
     // Load the configuration from the YAML file
     let config = config::load_config(&config_path);

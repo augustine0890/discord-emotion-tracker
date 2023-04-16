@@ -1,7 +1,13 @@
 development:
   discord_token: YOUR_DEVELOPMENT_DISCORD_TOKEN
   mongo_uri: YOUR_DEVELOPMENT_MONGODB_URI
+  aws_access_key_id:
+  aws_secret_access_key:
+  aws_region:
 
 production:
   discord_token: YOUR_PRODUCTION_DISCORD_TOKEN
   mongo_uri: YOUR_PRODUCTION_MONGODB_URI
+  aws_access_key_id:
+  aws_secret_access_key:
+  aws_region:
