@@ -1,18 +1,51 @@
+use serenity::client::Client;
+use serenity::model::id::ChannelId;
+use std::time::Duration;
 use sysinfo::{System, SystemExt};
+use tokio::time::interval_at;
+
+use crate::discord::{memory_stats_embed, send_embed_to_user};
+
+pub struct MemoryStats {
+    pub total_memory: f64,
+    pub used_memory: f64,
+    pub free_memory: f64,
+    pub available_memory: f64,
+    pub used_memory_percentage: f64,
+}
 
 fn bytes_to_gb(bytes: u64) -> f64 {
     bytes as f64 / (1024.0 * 1024.0 * 1024.0)
 }
 
-pub fn display_memory_stats() {
+fn get_memory_stats() -> MemoryStats {
     let mut system = System::new_all();
     system.refresh_all();
 
-    let total_memory = system.total_memory() * 1024;
-    let used_memory = system.used_memory() * 1024;
-    let free_memory = system.free_memory() * 1024;
+    let total_memory = bytes_to_gb(system.total_memory());
+    let used_memory = bytes_to_gb(system.used_memory());
+    let free_memory = bytes_to_gb(system.free_memory());
+    let available_memory = bytes_to_gb(system.available_memory());
+    let used_memory_percentage = used_memory as f64 / total_memory as f64 * 100.0;
+
+    MemoryStats {
+        total_memory,
+        used_memory,
+        free_memory,
+        available_memory,
+        used_memory_percentage,
+    }
+}
+
+fn display_memory_stats() {
+    let mut system = System::new_all();
+    system.refresh_all();
+
+    let total_memory = system.total_memory();
+    let used_memory = system.used_memory();
+    let free_memory = system.free_memory();
     // "free" memory refers to unallocated memory whereas "available" memory refers to memory that is available for (re)use.
-    let available_memory = system.available_memory() * 1024;
+    let available_memory = system.available_memory();
     let used_memory_percent = used_memory as f64 / total_memory as f64 * 100.0;
 
     println!(
@@ -37,4 +70,36 @@ pub fn display_memory_stats() {
     );
     println!("Used memory percentage: {:.2}%\n", used_memory_percent);
     println!("-----------------------------------------------------------");
+}
+
+pub async fn monitor_memory_stats(client: &Client, channel_id: ChannelId) {
+    let monitoring_interval = Duration::from_secs(2 * 60); // 2 minutes
+    let print_interval = Duration::from_secs(24 * 60 * 60); // 24 hours
+
+    let mut monitoring_timer = interval_at(tokio::time::Instant::now(), monitoring_interval);
+    let mut print_timer = interval_at(tokio::time::Instant::now(), print_interval);
+
+    loop {
+        tokio::select! {
+            _ = monitoring_timer.tick() => {
+                let stats = get_memory_stats();
+                let embed = memory_stats_embed(stats);
+
+                // Send the embed to the channel
+                let _ = channel_id.send_message(&client.cache_and_http.http, |m| {
+                    m.set_embed(embed.clone())
+                }).await;
+
+                // Send the embed as direct message
+                let user_id: u64 = 623155071735037982; // Replace with the target user's ID
+                if let Err(e) = send_embed_to_user(&client, user_id, embed).await {
+                    println!("Error sending DM: {:?}", e);
+                }
+            },
+
+            _ = print_timer.tick() => {
+                display_memory_stats();
+            },
+        }
+    }
 }

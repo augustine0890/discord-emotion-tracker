@@ -1,4 +1,5 @@
 use crate::mongo::{save_message, Message};
+use crate::monitor::{monitor_memory_stats, MemoryStats};
 use crate::sentiment::analyze_sentiment;
 use crate::util::{
     has_minimum_word_count, replace_mentions, should_ignore_channel, should_ignore_user,
@@ -7,9 +8,17 @@ use crate::util::{
 use chrono::{Duration, Utc};
 
 use mongodb::Database;
+
+use serenity::builder::CreateEmbed;
+use serenity::utils::Color;
 use serenity::{
     async_trait,
-    model::{channel::Channel, channel::Message as DiscordMessage, gateway::Ready},
+    model::{
+        channel::Channel,
+        channel::Message as DiscordMessage,
+        gateway::Ready,
+        id::{ChannelId, UserId},
+    },
     prelude::*,
 };
 
@@ -74,6 +83,10 @@ pub async fn run_discord_bot(token: &str, db: Database) -> tokio::task::JoinHand
         .await
         .expect("Error creating Discord client");
 
+    // Start monitoring and sending memory stats
+    let channel_id = ChannelId(1054296641651347486); // Replace with the specific channel ID
+    monitor_memory_stats(&client, channel_id).await;
+
     let handler = tokio::spawn(async move {
         client.start().await.expect("Error starting Discord client");
     });
@@ -88,4 +101,47 @@ async fn get_channel_name(ctx: Context, message: &DiscordMessage) -> Option<Stri
         Channel::Private(channel) => Some(channel.name()),
         _ => None,
     }
+}
+
+pub fn memory_stats_embed(stats: MemoryStats) -> CreateEmbed {
+    let mut embed = CreateEmbed::default();
+    embed
+        .title("Daily Memory Usage Report")
+        .field(
+            "Total Memory",
+            format!("{:.2} GB", stats.total_memory),
+            true,
+        )
+        .field("Used Memory", format!("{:.2} GB", stats.used_memory), true)
+        .field("Free Memory", format!("{:.2} GB", stats.free_memory), true)
+        .field(
+            "Available Memory",
+            format!("{:.2} GB", stats.available_memory),
+            false,
+        )
+        .field(
+            "Used Memory Percentage",
+            format!("{:.2}%", stats.used_memory_percentage),
+            false,
+        )
+        .timestamp(chrono::Utc::now().to_rfc3339())
+        .color(Color::new(0x0000ff));
+
+    embed
+}
+
+pub async fn send_embed_to_user(
+    client: &Client,
+    user_id: u64,
+    embed: CreateEmbed,
+) -> Result<(), serenity::Error> {
+    let user = UserId(user_id).to_user(&client.cache_and_http.http).await?;
+
+    let dm_channel = user.create_dm_channel(&client.cache_and_http.http).await?;
+
+    dm_channel
+        .send_message(&client.cache_and_http.http, |m| m.set_embed(embed))
+        .await?;
+
+    Ok(())
 }
