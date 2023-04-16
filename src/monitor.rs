@@ -77,10 +77,12 @@ pub async fn monitor_memory_stats(client: &Client, channel_id: ChannelId) {
     let monitoring_interval = Duration::from_secs(2 * 60); // 2 minutes
     let print_interval = Duration::from_secs(24 * 60 * 60); // 24 hours
     let sending_interval = Duration::from_secs(24 * 60 * 60); // 24 hours
+    let alert_interval = Duration::from_secs(60 * 60); // 1 hour
 
     let mut monitoring_timer = interval_at(tokio::time::Instant::now(), monitoring_interval);
     let mut print_timer = interval_at(tokio::time::Instant::now(), print_interval);
     let mut sending_timer = interval_at(tokio::time::Instant::now(), sending_interval);
+    let mut alert_timer = interval_at(tokio::time::Instant::now(), alert_interval);
 
     let mut stats = get_memory_stats();
 
@@ -88,6 +90,9 @@ pub async fn monitor_memory_stats(client: &Client, channel_id: ChannelId) {
         tokio::select! {
             _ = monitoring_timer.tick() => {
                 stats = get_memory_stats();
+            },
+
+            _ = alert_timer.tick() => {
                 if stats.used_memory_percentage > 95.0 {
                     let embed = memory_stats_alert_embed(stats.clone());
 
