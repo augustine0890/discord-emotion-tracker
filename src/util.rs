@@ -129,3 +129,16 @@ pub fn filter_guild(msg: &Message) -> bool {
 
     guild == guild_id.to_string()
 }
+
+pub fn remove_urls(content: &str) -> Option<String> {
+    let url_pattern = Regex::new(r"(https?://[^\s]+)").unwrap();
+
+    // Check if the entire text is a URL
+    if let Some(m) = url_pattern.find(&content) {
+        if m.start() == 0 && m.end() == content.len() {
+            return None;
+        }
+    }
+
+    Some(content.to_string())
+}

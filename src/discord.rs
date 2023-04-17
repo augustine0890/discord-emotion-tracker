@@ -2,7 +2,7 @@ use crate::mongo::{save_message, Message};
 use crate::monitor::{monitor_memory_stats, send_signal_alert, MemoryStats};
 use crate::sentiment::analyze_sentiment;
 use crate::util::{
-    filter_guild, has_minimum_word_count, replace_mentions, should_ignore_channel,
+    filter_guild, has_minimum_word_count, remove_urls, replace_mentions, should_ignore_channel,
     should_ignore_user, should_not_ignore_guild,
 };
 use chrono::{Duration, Utc};
@@ -36,7 +36,7 @@ impl EventHandler for Handler {
         if msg.author.bot
             || should_ignore_user(&msg)
             || should_ignore_channel(&msg)
-            || !has_minimum_word_count(&msg, 5)
+            || !has_minimum_word_count(&msg, 4)
             || should_not_ignore_guild(&msg)
             || !filter_guild(&msg)
         {
@@ -44,7 +44,15 @@ impl EventHandler for Handler {
         }
 
         // Replace mentions in the message content
-        let content = replace_mentions(&ctx, &msg).await;
+        let mut content = replace_mentions(&ctx, &msg).await;
+
+        // Remove URLs from the message content and return early if the content is None
+        match remove_urls(&content) {
+            Some(urls) => content = urls,
+            None => {
+                return;
+            }
+        }
 
         // Try to analyze sentiment and log any error that occurs
         let sentiment = analyze_sentiment(&content)
