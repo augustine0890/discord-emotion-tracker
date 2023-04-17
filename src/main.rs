@@ -25,6 +25,11 @@ async fn main() {
         .get_environment(&environment)
         .expect("Invalid environment configuration");
 
+    match environment.as_str() {
+        "production" => println!("Production running"),
+        _ => println!("Development running"),
+    };
+
     config::set_env_variables(env_config);
 
     let db = get_mongo_db(&env_config.mongo_uri).await;

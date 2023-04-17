@@ -81,6 +81,7 @@
 - Build the Docker image
     - `docker build -t discord-emotion-tracker .`
 - Run the Docker container
+    - `docker run -d discord-emotion-tracker` --> run in background
     - `docker run --name discord-emotion-tracker -it --rm discord-emotion-tracker`
 - Run the container in development enviroment
     - `docker run --env APP_ENV=development discord-emotion-tracker`
