@@ -1,6 +1,7 @@
 use crate::mongo::{save_message, Message};
 use crate::monitor::{monitor_memory_stats, send_signal_alert, MemoryStats};
 use crate::sentiment::analyze_sentiment;
+use crate::translate::translate_to_ko;
 use crate::util::{
     filter_guild, has_minimum_word_count, remove_urls, replace_mentions, should_ignore_channel,
     should_ignore_user, should_not_ignore_guild,
@@ -60,6 +61,15 @@ impl EventHandler for Handler {
             .map_err(|err| println!("Error detecting sentiment: {}", err))
             .ok();
 
+        // Translate the message content to Korean
+        let translate_ko = translate_to_ko(&content).await.map_or_else(
+            |err| {
+                println!("Error translating to Korean: {}", err);
+                None
+            },
+            |translated_text| translated_text,
+        );
+
         // Adjust the timestamp to the local timezone (UTC+9)
         let adjusted_timestamp = Utc::now() + Duration::hours(9);
 
@@ -72,6 +82,7 @@ impl EventHandler for Handler {
             username: msg.author.name,
             channel: channel_name,
             text: content,
+            korean: translate_ko,
             analyzed: sentiment,
             created_at: adjusted_timestamp,
             ..Default::default()

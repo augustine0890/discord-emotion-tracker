@@ -4,6 +4,7 @@ mod mongo;
 mod monitor;
 mod scheduler;
 mod sentiment;
+mod translate;
 mod util;
 
 use discord::run_discord_bot;
