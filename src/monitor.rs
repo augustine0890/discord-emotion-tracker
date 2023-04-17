@@ -98,7 +98,7 @@ pub async fn monitor_memory_stats(client: Client, channel_id: ChannelId) {
     let http = client.cache_and_http.http.clone();
     let sending_task = async move {
         // Set up the cron schedule for sending the memory_stats_embed at 10 AM every day
-        let cron_expression = "0 0 10 * * *"; // 10:0 AM every day
+        let cron_expression = "0 0 10 * * *"; // 10:00 AM every day
         let schedule =
             Schedule::from_str(cron_expression).expect("Failed to parse the cron schedule");
 
@@ -142,7 +142,7 @@ pub async fn monitor_memory_stats(client: Client, channel_id: ChannelId) {
                     }).await;
 
                     // Send the alert embed as a direct message
-                    let user_id: u64 = 623155071735037982; // Replace with the target user's ID
+                    let user_id: u64 = 1026733912778625026; // Replace with the target user's ID
                     if let Err(e) = send_embed_to_user(&client, user_id, embed).await {
                         println!("Error sending DM: {:?}", e);
                     }

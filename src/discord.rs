@@ -2,8 +2,8 @@ use crate::mongo::{save_message, Message};
 use crate::monitor::{monitor_memory_stats, send_signal_alert, MemoryStats};
 use crate::sentiment::analyze_sentiment;
 use crate::util::{
-    has_minimum_word_count, replace_mentions, should_ignore_channel, should_ignore_user,
-    should_not_ignore_guild,
+    filter_guild, has_minimum_word_count, replace_mentions, should_ignore_channel,
+    should_ignore_user, should_not_ignore_guild,
 };
 use chrono::{Duration, Utc};
 use mongodb::Database;
@@ -38,6 +38,7 @@ impl EventHandler for Handler {
             || should_ignore_channel(&msg)
             || !has_minimum_word_count(&msg, 5)
             || should_not_ignore_guild(&msg)
+            || !filter_guild(&msg)
         {
             return;
         }
