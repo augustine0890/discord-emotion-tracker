@@ -2,6 +2,7 @@ use regex::Regex;
 use serenity::model::prelude::ChannelId;
 use serenity::model::{channel::Channel, channel::Message};
 use serenity::prelude::*;
+use std::env;
 
 pub async fn replace_mentions(ctx: &Context, msg: &Message) -> String {
     let mut content = msg.content.clone();
@@ -117,4 +118,14 @@ pub fn should_not_ignore_guild(msg: &Message) -> bool {
     ];
 
     !guild_ids.iter().any(|&id| id == guild_id.to_string())
+}
+
+pub fn filter_guild(msg: &Message) -> bool {
+    let guild = env::var("DISCORD_GUILD").unwrap();
+    let guild_id = match msg.guild_id {
+        Some(id) => id,
+        None => return false,
+    };
+
+    guild == guild_id.to_string()
 }
