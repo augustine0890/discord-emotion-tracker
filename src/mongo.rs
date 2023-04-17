@@ -12,10 +12,10 @@ pub struct Message {
     pub username: String,
     pub channel: String,
     pub text: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub korean: Option<String>,
     #[serde(rename = "sentiment", skip_serializing_if = "Option::is_none")]
     pub analyzed: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub emotion: Option<String>,
     #[serde(rename = "createdAt")]
     #[serde(with = "bson::serde_helpers::chrono_datetime_as_bson_datetime")]
     pub created_at: chrono::DateTime<Utc>,
