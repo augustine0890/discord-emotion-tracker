@@ -5,7 +5,7 @@ FROM rust:latest as builder
 WORKDIR /app
 
 # Copy the `Cargo.toml`, `Cargo.lock`, and configuration files into the container
-COPY Cargo.toml Cargo.lock config.yaml ./
+COPY Cargo.toml config.yaml ./
 
 # Copy the source code into the container
 COPY src ./src
