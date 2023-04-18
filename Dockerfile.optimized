@@ -1,0 +1,43 @@
+# Use the official Rust image as the base image for building your application
+FROM rust:latest as builder
+
+# Install sccache
+# Install sccache with retry
+RUN for i in {1..5}; do cargo install sccache && break || (echo "Retry $i" && sleep 10); done
+
+# Enable sccache caching
+RUN --mount=type=cache,target=/sccache sccache --show-stats
+ENV SCCACHE_DIR=/sccache
+ENV RUSTC_WRAPPER=sccache
+
+# Create a new directory for the application and set it as the working directory
+WORKDIR /app
+
+# Copy the `Cargo.toml` and configuration files into the container
+COPY Cargo.toml config.yaml ./
+
+# Create a dummy `main.rs` file and build the application to cache dependencies
+RUN mkdir src && echo "fn main() {}" > src/main.rs
+RUN cargo build --release
+
+# Remove the dummy source and add the real source code
+RUN rm -rf src && rm /app/target/release/deps/discord_emotion_tracker*
+COPY src ./src
+
+# Build the application in release mode
+RUN cargo build --release
+
+# Start a new stage for the final deployment image
+FROM gcr.io/distroless/cc
+
+# Copy the compiled binary from the builder stage to the current stage
+COPY --from=builder /app/target/release/discord-emotion-tracker /app/discord-emotion-tracker
+
+# Copy the configuration file from the builder stage to the current stage
+COPY --from=builder /app/config.yaml /app/config.yaml
+
+# Set the working directory
+WORKDIR /app
+
+# Set the default command to run your application
+CMD ["./discord-emotion-tracker"]
