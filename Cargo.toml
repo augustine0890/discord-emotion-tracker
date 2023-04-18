@@ -23,4 +23,4 @@ chrono-tz = { version = "0.8.2", features = [ "filter-by-regex" ] }
 sysinfo = "0.28.4"
 
 [profile.release]
-codegen-units = 16 # Adjust the number based on your CPU cores
+codegen-units = 2 # Adjust the number based on your CPU cores
