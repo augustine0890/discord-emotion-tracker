@@ -85,6 +85,13 @@
     - `docker run --name discord-emotion-tracker -it --rm discord-emotion-tracker`
 - Run the container in development enviroment
     - `docker run --env APP_ENV=development discord-emotion-tracker`
+- Use sccache: sccache is a shared compilation cache that can help speed up Rust builds.
+- Enable BuildKit by setting the environment variable:
+    - `export DOCKER_BUILDKIT=1`
+- Check the number of CPU cores on Ubuntu using: `lscpu | grep '^CPU(s):'`
+- Build an image using the `Dockerfile.optimized`
+    - `docker build -t discord-emotion-tracker -f Dockerfile.optimized .`
+    - and run docker: `docker run -d discord-emotion-tracker`
 
 ## Usage
 - Once the application is running, it will listen to messages from the configured Discord channels. Messages will be sent to AWS Comprehend for sentiment analysis. The processed messages and sentiment analysis results will be stored in the MongoDB database.
