@@ -1,13 +1,13 @@
 # Discord Emotion Tracker
-- Discord Emotion Tracker is an application that collects messages from customer service channels on Discord and uses natural language processing techniques for sentiment analysis with AWS Comprehend. By processing these messages, the application can provide valuable insights into customer emotions and feedback.
-- The application then stores the messages along with their sentiment analysis results in a MongoDB database.
+- Discord Emotion Tracker is an application that collects messages from customer service channels on Discord, translates them from English to Korean using AWS Translate, and uses natural language processing techniques for sentiment analysis with AWS Comprehend. By processing these messages, the application can provide valuable insights into customer emotions and feedback.
+- The application then stores the messages, translations, and sentiment analysis results in a MongoDB database.
 
 ## Features
 - Collect messages from Discord channels using the Serenity library
 - Send collected messages to AWS Comprehend for sentiment analysis
-- Store processed messages and sentiment analysis results in MongoDB
-- Built using Rust, Serenity, AWS Comprehend, and MongoDB
-
+- Translate Discord messages from English to Korean using AWS Translate
+- Store processed messages, translations, and sentiment analysis results in MongoDB
+- Built using Rust, Serenity, AWS Comprehend, AWS Translate, and MongoDB
 ## Architecture Diagram
 ![](./emotion-tracker-diagram.png)
 
@@ -25,8 +25,10 @@
         ├── discord.rs
         ├── main.rs
         ├── mongo.rs
+        ├── monitor.rs
         ├── scheduler.rs
         ├── sentiment.rs
+        ├── translate.rs
         └── util.rs
 ```
 
@@ -94,7 +96,7 @@
     - and run docker: `docker run -d discord-emotion-tracker`
 
 ## Usage
-- Once the application is running, it will listen to messages from the configured Discord channels. Messages will be sent to AWS Comprehend for sentiment analysis. The processed messages and sentiment analysis results will be stored in the MongoDB database.
+- Once the application is running, it will listen to messages from the configured Discord channels. Messages will be sent to AWS Comprehend for sentiment analysis and AWS Translate for English to Korean translation. The processed messages, translations, and sentiment analysis results will be stored in the MongoDB database.
 ## Contributing
 We welcome contributions! If you'd like to help improve Discord Emotion Tracker, please follow these steps:
 
@@ -109,4 +111,5 @@ This project is licensed under the [MIT License](https://opensource.org/licenses
 - [Rust](https://www.rust-lang.org/)
 - [Serenity](https://github.com/serenity-rs/serenity): Discord API library
 - [AWS Comprehend](https://docs.aws.amazon.com/comprehend/latest/dg/what-is.html): Natural Language Processing and Text Analytics
-- [MongoDB](https://www.mongodb.com/): A document database for storing messages and analysis results
+- [AWS Translate](https://aws.amazon.com/translate/): Fully managed neural machine translation service
+- [MongoDB](https://www.mongodb.com/): A document database for storing messages, translations, and analysis results
