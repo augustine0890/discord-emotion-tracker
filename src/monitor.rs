@@ -92,9 +92,6 @@ pub async fn monitor_memory_stats(client: Client, channel_id: ChannelId) {
     let mut print_timer = interval_at(tokio::time::Instant::now(), print_interval);
     let mut alert_timer = interval_at(tokio::time::Instant::now(), alert_interval);
 
-    // Initialize the memory stats
-    let mut stats = get_memory_stats();
-
     let http = client.cache_and_http.http.clone();
     let sending_task = async move {
         // Set up the cron schedule for sending the memory_stats_embed at 10 AM every day
@@ -113,7 +110,10 @@ pub async fn monitor_memory_stats(client: Client, channel_id: ChannelId) {
             let duration_until_next_event = (next_event - seoul_now).to_std().unwrap();
             tokio::time::sleep(duration_until_next_event).await;
 
-            let embed = memory_stats_embed(stats.clone());
+            // Call get_memory_stats() inside the loop
+            let stats = get_memory_stats();
+
+            let embed = memory_stats_embed(stats);
             let _ = channel_id
                 .send_message(&http, |m| m.set_embed(embed.clone()))
                 .await;
@@ -122,6 +122,9 @@ pub async fn monitor_memory_stats(client: Client, channel_id: ChannelId) {
 
     // Send the memory_stats_embed at 10 AM every day
     tokio::spawn(sending_task);
+
+    // Initialize the memory stats
+    let mut stats = get_memory_stats();
 
     loop {
         tokio::select! {
