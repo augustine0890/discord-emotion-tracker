@@ -9,8 +9,8 @@ use tokio::time::sleep;
 pub async fn start_scheduler(db: &Database) {
     // Define the cron expression for scheduling the task.
     // The task will run at 10:00 AM every Monday.
-    let cron_expression = "0 0 10 * * MON";
-    // let cron_expression = "0 * * * * *"; // Runs every minute
+    // let cron_expression = "0 0 10 * * MON";
+    let cron_expression = "0 * * * * *"; // Runs every minute
     let schedule = Schedule::from_str(cron_expression).unwrap();
 
     loop {

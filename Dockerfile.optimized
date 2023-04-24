@@ -30,6 +30,9 @@ RUN cargo build --release
 # Start a new stage for the final deployment image
 FROM gcr.io/distroless/cc
 
+# Set the timezone
+ENV TZ=Asia/Seoul
+
 # Copy the compiled binary from the builder stage to the current stage
 COPY --from=builder /app/target/release/discord-emotion-tracker /app/discord-emotion-tracker
 
