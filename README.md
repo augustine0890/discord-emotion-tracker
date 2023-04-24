@@ -92,6 +92,7 @@
     - `export DOCKER_BUILDKIT=1`
 - Check the number of CPU cores on Ubuntu using: `lscpu | grep '^CPU(s):'`
 - Build an image using the `Dockerfile.optimized`
+    - `export DOCKER_BUILDKIT=1`
     - `docker build -t discord-emotion-tracker -f Dockerfile.optimized .`
     - and run docker: `docker run -d discord-emotion-tracker`
 
