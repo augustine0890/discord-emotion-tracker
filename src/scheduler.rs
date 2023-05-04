@@ -34,22 +34,20 @@ pub async fn start_scheduler(db: &Database) {
         // Sleep the current task for the calculated duration
         sleep(duration_until_next_event).await;
 
-        let timestamp = Utc::now();
-        let formatted_timestamp = timestamp.format("%Y-%m-%d %H:%M:%S");
+        let mut timestamp = Utc::now().format("%Y-%m-%d %H:%M:%S");
+        // let formatted_timestamp = timestamp.format("%Y-%m-%d %H:%M:%S");
 
         // After waking up, run the delete_messages function
-        println!("[{}] Running delete messages", formatted_timestamp);
+        println!("[{}] Running delete messages", timestamp);
         // If there is an error while running delete_messages, print the error
         match delete_messages(&db).await {
-            Ok((formatted_timestamp, result)) => {
+            Ok(result) => {
+                timestamp = Utc::now().format("%Y-%m-%d %H:%M:%S");
                 let deleted_count = result.deleted_count;
-                println!(
-                    "[{}] Deleted {} message(s)",
-                    formatted_timestamp, deleted_count
-                );
+                println!("[{}] Deleted {} message(s)", timestamp, deleted_count);
             }
             Err(e) => {
-                println!("[{}] Error deleting messages: {:?}", formatted_timestamp, e);
+                println!("[{}] Error deleting messages: {:?}", timestamp, e);
             }
         }
     }

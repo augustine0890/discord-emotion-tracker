@@ -44,9 +44,7 @@ pub async fn save_message(db: &Database, message: &Message) -> Result<(), Error>
         .map(|_| ())
 }
 
-pub async fn delete_messages(
-    db: &Database,
-) -> Result<(String, DeleteResult), Box<dyn std::error::Error>> {
+pub async fn delete_messages(db: &Database) -> Result<DeleteResult, Box<dyn std::error::Error>> {
     let message_collection = db.collection::<mongodb::bson::Document>("messages");
     let three_weeks_ago = Utc::now() - Duration::weeks(3);
     let three_weeks_ago_bson = DateTime::from_chrono(three_weeks_ago);
@@ -55,8 +53,5 @@ pub async fn delete_messages(
         .delete_many(doc! { "createdAt": { "$lt": three_weeks_ago_bson } }, None)
         .await?;
 
-    let timestamp = Utc::now();
-    let formatted_timestamp = timestamp.format("%Y-%m-%d %H:%M:%S").to_string();
-
-    Ok((formatted_timestamp, delete_result))
+    Ok(delete_result)
 }
