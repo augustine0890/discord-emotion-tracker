@@ -62,8 +62,19 @@
         - `rustc --version`
         - `cargo --version`
         - `rustup --version`
+- The build-essential package includes a number of tools necessary for compiling software fro- source on Ubuntu, including gcc (the GNU C compiler), make (a utility for directin- compilation), and other necessary utilities.
+- Install necessary C build tools: `sudo apt install build-essential`
 - Execute permissions: `chmod +x start_app.sh`
 - Run the application as background: `./start_app.sh`
+- Check the application is running: `ps -p $(cat discord-emotion-tracker.pid)`
+- View the application's output:
+    - `cat discord-emotion-tracker.log`
+    - Or for real-time output: `tail -f discord-emotion-tracker.log`
+- To stop the application (use `kill` with PID): `kill $(cat discord-emotion-tracker.pid)`
+- (Optional) Rename the log files
+    - `mv discord-emotion-tracker.log discord-emotion-tracker.log.datetime`
+<br>
+- Run the application without using `start_app.sh`:
     ```bash
     cargo build --release
     cargo run --release
@@ -75,8 +86,8 @@
 
     # Use development environment
     APP_ENV=development ./target/release/discord-emotion-tracker
+    
     ```
-
 - Alternatively, you can run the application directly with `cargo run`:
     ```bash
     # Use production environment (default)
