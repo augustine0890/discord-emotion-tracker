@@ -55,7 +55,15 @@
 4. Update the `config.yaml` file with your Discord token and MongoDB URI.
 
 5. Build and run the project:
-
+- Install Rust on Ubuntu
+    - Download and install Rust: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+    - Add cargo's bin directory to the PATH environment variable: `source $HOME/.cargo/env`
+    - Check Rust installation:
+        - `rustc --version`
+        - `cargo --version`
+        - `rustup --version`
+- Execute permissions: `chmod +x start_app.sh`
+- Run the application as background: `./start_app.sh`
     ```bash
     cargo build --release
     cargo run --release
