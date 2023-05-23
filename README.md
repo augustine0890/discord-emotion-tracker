@@ -75,19 +75,21 @@
     - `mv discord-emotion-tracker.log discord-emotion-tracker.log.datetime`
 <br>
 - Run the application without using `start_app.sh`:
+
     ```bash
     cargo build --release
     cargo run --release
     ```
+
     and
     ```bash
     # Use production environment (default)
     ./target/release/discord-emotion-tracker
 
     # Use development environment
-    APP_ENV=development ./target/release/discord-emotion-tracker
-    
+    APP_ENV=development ./target/release/discord-emotion-tracker    
     ```
+
 - Alternatively, you can run the application directly with `cargo run`:
     ```bash
     # Use production environment (default)
