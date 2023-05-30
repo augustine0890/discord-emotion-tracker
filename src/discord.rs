@@ -37,7 +37,7 @@ impl EventHandler for Handler {
         if msg.author.bot
             || should_ignore_user(&msg)
             || should_ignore_channel(&msg)
-            || !has_minimum_word_count(&msg, 4)
+            || !has_minimum_word_count(&msg, 5)
             || should_not_ignore_guild(&msg)
             || !filter_guild(&msg)
         {
