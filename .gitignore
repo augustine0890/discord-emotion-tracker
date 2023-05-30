@@ -9,3 +9,7 @@ Cargo.lock
 .cargo
 # The config yaml file
 config.yaml
+
+# The old log and pid files
+discord-emotion-tracker.log
+discord-emotion-tracker.pid
