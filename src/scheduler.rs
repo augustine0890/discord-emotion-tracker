@@ -31,14 +31,15 @@ pub async fn start_scheduler(db: &Database) {
         // Sleep the current task for the calculated duration
         sleep(duration_until_next_event).await;
 
-        // Get the current timestamp
-        let timestamp = Utc::now().format("%Y-%m-%d %H:%M:%S");
-
-        // Print the message for running delete messages
-        println!("[{}] Running delete messages", timestamp);
         let mut task_succeeded = false;
 
         while !task_succeeded {
+            // Get the current timestamp inside the while loop
+            let timestamp = Utc::now().format("%Y-%m-%d %H:%M:%S");
+
+            // Print the message for running delete messages
+            println!("[{}] Running delete messages", timestamp);
+
             // Run the delete_messages function
             match delete_messages(&db).await {
                 Ok(result) => {
